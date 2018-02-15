@@ -14,10 +14,10 @@ import random
 from bs4 import BeautifulSoup
 import requests
 
-import battle
-import cards
+# import battle
+# import cards
 from hipchat_notification import text_notification
-from dictionary import total_definitions
+# from dictionary import total_definitions
 
 imgur_id = os.environ.get('imgur_id', None)
 imgur_secret = os.environ.get('imgur_secret', None)
