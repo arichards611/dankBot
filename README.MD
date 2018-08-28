@@ -9,7 +9,7 @@
   - Roll dice
   - Choose an item from a list, for the indicisive bot user
   - Play cards against humanity(!)
-  - Play a crappy battle game
+  - Play a crappy battle game.
   - Be sassy AF
 
 # how?
