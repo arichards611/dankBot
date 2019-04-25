@@ -14,10 +14,10 @@ import random
 from bs4 import BeautifulSoup
 import requests
 
-import battle
-import cards
+#import battle
+#import cards
 from hipchat_notification import text_notification
-from dictionary import total_definitions
+#from dictionary import total_definitions
 
 imgur_id = os.environ.get('imgur_id', None)
 imgur_secret = os.environ.get('imgur_secret', None)
@@ -302,18 +302,18 @@ def handle_hipchat(hipchat_request):
     elif command == u'/halp':
         message = "bro use /dank for all, /mank for imgur, /jank for giphy, /bank for bing" \
                   " /gank for goog, /roll for roll, /cards for cards againt humanity"
-    elif command == u'/attack':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/block':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/rez':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/status':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/cards':
-        message = cards.cards_handler(command, parsed, derp)
-    elif command == u'/define':
-        message = total_definitions(define=parsed, room_id=room)
+    #elif command == u'/attack':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/block':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/rez':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/status':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/cards':
+    #    message = cards.cards_handler(command, parsed, derp)
+    #elif command == u'/define':
+    #    message = total_definitions(define=parsed, room_id=room)
     else:
         message = "welp! command not found: {0}".format(command)
 
