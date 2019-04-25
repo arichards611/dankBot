@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # hipchat imgur + giphy + goog + etc bot
 
-from bottle import Bottle, run, request, response
+from bottle import Bottle, run, request
 from imgurpython import ImgurClient
 from imgurpython.helpers.error import ImgurClientError
 from dice import roll_the_dice
@@ -11,8 +11,6 @@ import googleapiclient.discovery
 import json
 import os
 import random
-from bs4 import BeautifulSoup
-import requests
 
 #import battle
 #import cards
@@ -31,39 +29,18 @@ state = {
     "RNG": 100
     }
 
-
 def search_all(search):
     results = []
-
-    # all_bing = bing_image_search(search)
-    all_bing_api = bing_api_search(search)
-    if all_bing_api:
-        results.append(all_bing_api)
-        if DEBUG:
-            print("""[dankBot] [DEBUG] search="{0} resource="{1}" Results found.""".format(search, "bing"))
-
     all_imgur = imgur_search(search)
     if all_imgur:
         results.append(all_imgur)
-        if DEBUG:
-            print("""[dankBot] [DEBUG] search="{0} resource="{1}" Results found.""".format(search, "imgur"))
-
-    all_giphy = giphy_search(search)
-    if all_giphy:
-        results.append(all_giphy)
-        if DEBUG:
-            print("""[dankBot] [DEBUG] search="{0} resource="{1}" Results found.""".format(search, "giphy"))
-
-    if not results:
-        results.append(google_api_search(search))
-        if not results:
-            message = "Somehow got nothing for {0} searching all of the internet, bro.".format(search)
-        else:
-            message = results[0]
-    else:
-        message = random.choice(results)
+    all_google = google_search(search)
+    if all_google:
+        results.append(all_google)
+    message = random.choice(results)
+    if message is None:
+        message = "Somehow got nothing for {0} searching all of the internet, bro.".format(search)
     return message
-
 
 def imgur_search(search=""):
     try:
@@ -92,88 +69,20 @@ def imgur_search(search=""):
         if len(item.link) > 7 and item.link[-5] == 'h':
             gif_link = item.link[0:-5]+item.link[-4:]
             if DEBUG:
-                print("""[dankBot] [DEBUG] search="{0}" link="{1}" Large gif link found, modifying link."""
-                      .format(search, item.link))
+                print ("""[dankBot] [DEBUG] search="{0}" link="{1}" Large gif link found, modifying link.""").format(search, item.link)
         else:
             gif_link = item.link
     else:
         gif_link = None
         if DEBUG:
-            print("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""".format(search, "imgur"))
+            print ("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""").format(search, "imgur")
     return gif_link
 
     # print "tag search"
     # items = client.gallery_tag("datto", sort='viral', page=0, window='week')
     # print dir(items.items[0])
 
-
-def giphy_search(search=""):
-    try:
-        client = giphypop.Giphy()
-    except Exception as e:
-        return u'sorry i could not reach giphy :/ E_MSG: {0}'.format(e)
-    try:
-        items = client.search_list(phrase=search)
-    except Exception as e:
-        return u'derp, something bad happened: {0}'.format(e)
-    if items:
-        item = random.choice(items)
-        item = item.fixed_height.url
-    else:
-        item = None
-        if DEBUG:
-            print("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""".format(search, "giphy"))
-    return item
-
-
-def get_soup(url, header):
-    page = requests.get(
-        url=url,
-        headers=header)
-    return BeautifulSoup(page.content, "html.parser")
-
-
-# not useful as bing has an api that's reasonable
-def bing_image_search(search=""):
-    search_url = "https://www.bing.com/images/search?q=" + search.replace(' ', '+')
-    search_header = {"User-Agent": "Chrome/51"}
-    soup = get_soup(search_url, search_header)
-    images = soup.find_all("a", attrs={'title': 'View image details'})
-    link = ""
-    if images:
-        img = random.choice(images)
-        try:
-            link = img.attrs.get("m").split("\",")[6].split(":\"")[1]
-        except IndexError as e:
-            print("""[dankBot] [DEBUG] search="{0}" resource="{1}, Exception="{2}" Results found could not be parsed."""
-                  .format(search, "bing", e.message))
-    return link
-
-
-def bing_api_search(search=""):
-    link = ""
-    images = ""
-    headers = {
-        # Request headers
-        'Content-Type': 'multipart/form-data',
-        'Ocp-Apim-Subscription-Key': os.environ.get("BING_AUTH_TOKEN"),
-    }
-    request_url = "https://api.cognitive.microsoft.com/bing/v5.0/images/search?q=" + search.replace(' ', '+')
-
-    r = requests.post(
-        url=request_url,
-        headers=headers)
-
-    try:
-        images = json.loads(r.content).get("value")
-    except ValueError as ve:
-        print("""[dankBot] [DEBUG] Bing Api Error {0}. """.format(ve.message))
-    if images:
-        link = random.choice(images).get("contentUrl")
-    return link
-
-
-def google_api_search(search=""):
+def google_search(search=""):
     service = googleapiclient.discovery.build("customsearch", "v1",
                                               developerKey=google_api_key)
     res = service.cse().list(
@@ -187,27 +96,24 @@ def google_api_search(search=""):
     if num_results == 0:
         item = None
         if DEBUG:
-            print ("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""".format(search, "google"))
+            print ("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""").format(search, "google")
     else:
         # pprint.pprint(res)
         item = random.choice(res[u'items'])[u'link']
     return item
 
-
 def dankify(words):
     """ /dankify message here! -> returns (m)(e)(s)(s)(a)(g)(e)(space)(h)(e)(r)(e)(bang) """
-    dank = ["(space)" if w == " " else "(bang)" if w == "!" else "({0})".format(w) for w in words]
+    dank = [ "(space)" if w == " " else "(bang)" if w == "!" else "({0})".format(w) for w in words ]
     dank = "".join(dank)
     return dank
 
 app = Bottle()
 
-
 @app.route('/stats')
 def stats():
     client = ImgurClient(imgur_id, imgur_secret)
-    # looks like {u'UserLimit': 500, u'UserRemaining': 500,
-    # u'UserReset': 1449849295, u'ClientLimit': 12500, u'ClientRemaining': 11351}
+    # looks like {u'UserLimit': 500, u'UserRemaining': 500, u'UserReset': 1449849295, u'ClientLimit': 12500, u'ClientRemaining': 11351}
     template = (
     "<html><body>"
     "---Imgur API info---<br>"
@@ -219,13 +125,11 @@ def stats():
     "</body></html>")
     return template.format(**client.credits)
 
-
 @app.route('/capabilities.json')
 def caps():
     with open("capabilities.json", "r") as f:
         c = f.read()
     return c
-
 
 @app.route('/dev_capabilities.json')
 def dev_caps():
@@ -233,47 +137,9 @@ def dev_caps():
         c = f.read()
     return c
 
-
-def parse_slack_data(data):
-    slack_data = {}
-    for pair in data.split('&'):
-        try:
-            k, v = pair.split('=')
-            slack_data[k] = v
-        except ValueError:
-            pass # some mystery shit i dunno what to do with
-    return slack_data
-
-
-def handle_slack(slack_request):
-    postdata = slack_request.body.read()
-    data = parse_slack_data(postdata)
-    message = ""
-    if 'dank' in data['command']:
-        link = search_all(data['text'])
-        message = format_slack(link)
-    elif 'jank' in data['command']:
-        link = giphy_search(data['text'])
-        message = format_slack(link)
-    elif 'gank' in data['command']:
-        link = google_api_search(data['text'])
-        message = format_slack(link)
-    elif 'mank' in data['command']:
-        link = imgur_search(data['text'])
-        message = format_slack(link)
-    return message
-
-
-def format_slack(link):
-    json_resp = {'response_type': 'in_channel',
-                 'text': link,
-                 }
-    return json_resp
-
-
-def handle_hipchat(hipchat_request):
-
-    derp = hipchat_request.json
+@app.route('/', method='POST')
+def handle():
+    derp = request.json
     msg = derp[u'item'][u'message'][u'message']
     room = derp[u'item'][u'room'][u'name']
     who = derp[u'item'][u'message'][u'from'][u'mention_name']
@@ -289,19 +155,15 @@ def handle_hipchat(hipchat_request):
         message = dankify(parsed)
     elif command == u'/dankdev':
         message = devcmd.handler(parsed, who, state)
-    elif command == u'/jank':
-        message = giphy_search(search=parsed)
     elif command == u'/gank':
-        message = google_api_search(search=parsed)
+        message = google_search(search=parsed)
     elif command == u'/mank':
         message = imgur_search(search=parsed)
-    elif command == u'/bank':
-        message = bing_api_search(search=parsed)
     elif command == u'/roll':
         message = roll_the_dice(stuff=parsed)
     elif command == u'/halp':
         message = "bro use /dank for all, /mank for imgur, /jank for giphy, /bank for bing" \
-                  " /gank for goog, /roll for roll, /cards for cards againt humanity"
+                  " /gank for goog"
     #elif command == u'/attack':
     #    message = battle.handler(command, parsed, derp)
     #elif command == u'/block':
@@ -323,26 +185,13 @@ def handle_hipchat(hipchat_request):
     if who in state['HOTSEAT'] and random.randint(0, state['RNG']) == 0:
         message = "/me thinks @{0} needs to shut the f up...".format(who)
 
-    resp = text_notification(message)
-
+    resp = {"color": "random",
+            "message": message,
+            "notify": False,
+            "message_format": "text"}
     # log-message
-    print("""[dankBot] room="{0}" who="{1}" cmd="{2}" parsed="{3}" msg="{4}"."""
-          .format(room, who, command, parsed, message))
-
+    print("""[dankBot] room="{0}" who="{1}" cmd="{2}" parsed="{3}" msg="{4}".""").format(room, who, command, parsed, message)
     return json.dumps(resp)
-
-
-@app.route('/', method='POST')
-def handle():
-    if "slackbot" in request.environ.get("HTTP_USER_AGENT").lower():
-        reply = handle_slack(request)
-    else:
-        reply = handle_hipchat(request)
-
-    response.content_type = 'application/json'
-
-    return json.dumps(reply)
-
 
 @app.route('/', method='GET')
 def index():
