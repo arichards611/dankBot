@@ -12,7 +12,10 @@ import json
 import os
 import random
 
-import battle
+#import battle
+#import cards
+from hipchat_notification import text_notification
+#from dictionary import total_definitions
 
 imgur_id = os.environ.get('imgur_id', None)
 imgur_secret = os.environ.get('imgur_secret', None)
@@ -159,15 +162,20 @@ def handle():
     elif command == u'/roll':
         message = roll_the_dice(stuff=parsed)
     elif command == u'/halp':
-        message = "bro use /dank for all, /mank for imgur, /jank for giphy, /gank for goog, /roll for roll"
-    elif command == u'/attack':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/block':
-        message = battle.handler(command, parsed, derp)
-    elif command == u'/rez':
-        message = battle.handler(command,parsed, derp)
-    elif command == u'/status':
-        message = battle.handler(command, parsed, derp)
+        message = "bro use /dank for all, /mank for imgur, /jank for giphy, /bank for bing" \
+                  " /gank for goog"
+    #elif command == u'/attack':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/block':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/rez':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/status':
+    #    message = battle.handler(command, parsed, derp)
+    #elif command == u'/cards':
+    #    message = cards.cards_handler(command, parsed, derp)
+    #elif command == u'/define':
+    #    message = total_definitions(define=parsed, room_id=room)
     else:
         message = "welp! command not found: {0}".format(command)
 
