@@ -31,9 +31,6 @@ def search_all(search):
     all_imgur = imgur_search(search)
     if all_imgur:
         results.append(all_imgur)
-    all_giphy = giphy_search(search)
-    if all_giphy:
-        results.append(all_giphy)
     all_google = google_search(search)
     if all_google:
         results.append(all_google)
@@ -81,25 +78,6 @@ def imgur_search(search=""):
     # print "tag search"
     # items = client.gallery_tag("datto", sort='viral', page=0, window='week')
     # print dir(items.items[0])
-
-def giphy_search(search=""):
-    try:
-        client = giphypop.Giphy()
-    except Exception as e:
-        return u'sorry i could not reach giphy :/ E_MSG: {0}'.format(e)
-    try:
-        items = client.search_list(phrase=search)
-    except Exception as e:
-        return u'derp, something bad happened: {0}'.format(e)
-    if items:
-        item = random.choice(items)
-        item = item.fixed_height.url
-    else:
-        item = None
-        if DEBUG:
-            print ("""[dankBot] [DEBUG] search="{0}" resource="{1}" No results found.""").format(search, "giphy")
-    return item
-
 
 def google_search(search=""):
     service = googleapiclient.discovery.build("customsearch", "v1",
